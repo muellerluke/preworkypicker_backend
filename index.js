@@ -28,6 +28,19 @@ app.use(limiter);
 app.use(express.json());
 let whitelist = ['https://preworkypicker.com', 'https://preworkypicker.com/', 'http://preworkypicker.com', 'http://localhost:3000/', 'http://localhost:3000'];
 
+let data = {};
+getData();
+setInterval(getData, 3600000);
+function getData() {
+  connection.query("SELECT * FROM db1.Preworkouts", function(err, rows)
+  {
+    if (err) {
+      console.log(err);
+    }
+    data = rows;
+  });
+}
+
 app.use(cors({
   origin: function(origin, callback){
     // allow requests with no origin
@@ -43,7 +56,7 @@ app.use(cors({
 
 app.get('/', (req, res) => {
   //get all column names
-  connection.query("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = Database() AND TABLE_NAME = 'Preworkouts'", function(err, rows, fields)
+  connection.query("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = Database() AND TABLE_NAME = 'Preworkouts' AND COLUMN_NAME != 'Link' AND COLUMN_NAME != 'Servings' AND COLUMN_NAME != 'Name'", function(err, rows, fields)
   {
     if (err) {
       res.send("Error: " + err);
@@ -51,11 +64,17 @@ app.get('/', (req, res) => {
     }
     //array of objects with COLUMN_NAME as key value
     var results = Object.values(JSON.parse(JSON.stringify(rows)));
+
     res.send(results);
   });
 });
 
-app.post('/search', (req, res) => {
+app.get('/search', (req, res) => {
+  console.log(Object.values(JSON.parse(JSON.stringify(data))));
+  res.send(Object.values(JSON.parse(JSON.stringify(data))));
+});
+
+/*app.post('/search', (req, res) => {
   let bodyArr = req.body;
   console.log(bodyArr);
   let queryStatement = "SELECT * FROM db1.Preworkouts WHERE ";
@@ -74,7 +93,7 @@ app.post('/search', (req, res) => {
     }
     res.send(rows);
   });
-});
+});*/
 
 https.createServer({
   key: privateKey,
